@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <string.h>
 #include "primlib.h"
 #include "pieces.h"
 
@@ -24,6 +25,9 @@ typedef struct {
 void initVariables() {
     boardCoors[0] = (gfx_screenWidth() - BOARD_WIDTH) / 2;
     boardCoors[1] = (gfx_screenHeight() - BOARD_HEIGHT) / 2;
+    for (int x = 0; x < GAME_WIDTH; x++) board[19][x] = 1;
+    for (int x = 0; x < GAME_WIDTH; x++) board[18][x] = 1;
+    board[18][0] = 0;
 }
 
 void drawPixel(int x, int y, int color) {
@@ -81,6 +85,13 @@ void lockPiece(piece tile) {
     }
 }
 
+void collapseBoard() {
+    for (int y = 0; y < GAME_HEIGHT-1; y++) {
+        memcpy(board[y], board[y+1], sizeof(char)*GAME_WIDTH);
+    }
+    for (int x = 0; x < GAME_WIDTH; x++) board[0][x] = 0;
+}
+
 void checkConstants() {
     int totalHeight = BOARD_HEIGHT + 2*(MARGIN+BORDER);
     int totalWidth = BOARD_WIDTH + 2*(MARGIN+BORDER);
@@ -93,12 +104,16 @@ int main() {
     checkConstants();
     initVariables();
     drawBoard();
-    piece tile;
-    tile.coors[0] = 0;
-    tile.coors[1] = 0;
-    tile.kind = 0;
-    tile.rotation = 0;
-    drawPiece(tile);
+    // piece tile;
+    // tile.coors[0] = 0;
+    // tile.coors[1] = 0;
+    // tile.kind = 0;
+    // tile.rotation = 0;
+    // drawPiece(tile);
+    gfx_updateScreen();
+    SDL_Delay(2000);
+    collapseBoard();
+    drawBoard();
     gfx_updateScreen();
     gfx_getkey();
     return 0;
