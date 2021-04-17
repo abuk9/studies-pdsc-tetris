@@ -3,55 +3,87 @@
 #include <assert.h>
 #include "primlib.h"
 #include "pieces.h"
-#define BOARD_HEIGHT 20
-#define BOARD_WIDTH 15
-#define BOARD_BORDER 3
-#define MARGIN 2
-#define PIXEL_SIZE 30
 
-char board[BOARD_HEIGHT][BOARD_WIDTH] = {{1}};
-int boardCoors[2][2];
+#define GAME_HEIGHT 20
+#define GAME_WIDTH 15
+
+#define PIXEL_SIZE 30
+#define BORDER 3
+#define MARGIN 3
+#define BOARD_HEIGHT GAME_HEIGHT*(PIXEL_SIZE + MARGIN) - MARGIN
+#define BOARD_WIDTH GAME_WIDTH*(PIXEL_SIZE + MARGIN) - MARGIN
+
+char board[GAME_HEIGHT][GAME_WIDTH] = {0};
+int boardCoors[2];
+typedef struct {
+    int coors[2];
+    int kind;
+    int rotation;
+} piece;
 
 void initVariables() {
-    boardCoors[0][0] = (gfx_screenWidth() - BOARD_WIDTH*(PIXEL_SIZE+MARGIN)) / 2;
-    boardCoors[0][1] = (gfx_screenHeight() - BOARD_HEIGHT*(PIXEL_SIZE+MARGIN)) / 2;
-    boardCoors[1][0] = (gfx_screenWidth() + BOARD_WIDTH*(PIXEL_SIZE+MARGIN)) / 2;
-    boardCoors[1][1] = (gfx_screenHeight() + BOARD_HEIGHT*(PIXEL_SIZE+MARGIN)) / 2;
-    for (int i = 0; i < BOARD_WIDTH; i++) {
-        for (int y = 0; y < BOARD_HEIGHT; y++) {
-            board[y][i] = 1;
-        }
-    }
+    boardCoors[0] = (gfx_screenWidth() - BOARD_WIDTH) / 2;
+    boardCoors[1] = (gfx_screenHeight() - BOARD_HEIGHT) / 2;
 }
 
 void drawPixel(int x, int y, int color) {
-    int xCoor = boardCoors[0][0] + x*(PIXEL_SIZE + MARGIN);
-    int yCoor = boardCoors[0][1] + y*(PIXEL_SIZE + MARGIN);
+    int xCoor = boardCoors[0] + x*(PIXEL_SIZE + MARGIN);
+    int yCoor = boardCoors[1] + y*(PIXEL_SIZE + MARGIN);
     gfx_filledRect(xCoor, yCoor, xCoor + PIXEL_SIZE -1,
         yCoor + PIXEL_SIZE -1, color);
 }
 
-void renderBoard() {
-    gfx_filledRect(0, 0, gfx_screenHeight()-1, gfx_screenHeight()-1, BLACK);
+void drawFrame() {
     for (int i = 0; i < 2; i++) {
         int color = i == 0 ? RED : BLACK;
-        int off = i == 0 ? BOARD_BORDER + MARGIN : MARGIN;
-        gfx_filledRect(boardCoors[0][0] - off, boardCoors[0][1] - off,
-        boardCoors[1][0] + off, boardCoors[1][1] + off, color);
+        int off = i == 0 ? BORDER + MARGIN : MARGIN;
+        gfx_filledRect(boardCoors[0] - off, boardCoors[1] - off,
+            boardCoors[0] + off + BOARD_WIDTH,
+            boardCoors[1] + off + BOARD_HEIGHT, color);
     }
+}
 
-    for (int y = 0; y < BOARD_HEIGHT; y++) {
-        for (int x = 0; x < BOARD_WIDTH; x++) {
+void drawBoard() {
+    gfx_filledRect(0, 0, gfx_screenHeight()-1, gfx_screenHeight()-1, BLACK);
+    drawFrame();
+    for (int y = 0; y < GAME_HEIGHT; y++) {
+        for (int x = 0; x < GAME_WIDTH; x++) {
             if (board[y][x]) drawPixel(x, y, MAGENTA); 
         }
     }
+}
 
-    gfx_updateScreen();
+void drawPiece(piece tile) {
+    const char (*shape)[4] = pieces[tile.kind][tile.rotation];
+    for (int dy = 0; dy < 4; dy++) {
+        for (int dx = 0; dx < 4; dx++) {
+            // ASK QUESTION ABOUT THIS
+            char isFilled = *(*(shape+dy)+dx);
+            if (isFilled) {
+                int color = isFilled == 1 ? CYAN : BLUE;
+                drawPixel(tile.coors[0] + dx, tile.coors[1] + dy, color);
+            }
+        }
+    }
+}
+
+void lockPiece(piece tile) {
+    const char (*shape)[4] = pieces[tile.kind][tile.rotation];
+    for (int dy = 0; dy < 4; dy++) {
+        for (int dx = 0; dx < 4; dx++) {
+            char isFilled = *(*(shape+dy)+dx);
+            if (isFilled) {
+                int x = tile.coors[0] + dx;
+                int y = tile.coors[1] + dy;
+                board[y][x] = 1;
+            }
+        }
+    }
 }
 
 void checkConstants() {
-    int totalHeight = BOARD_HEIGHT*(PIXEL_SIZE+MARGIN)+2*(MARGIN+BOARD_BORDER);
-    int totalWidth = BOARD_WIDTH*(PIXEL_SIZE+MARGIN)+2*(MARGIN+BOARD_BORDER);
+    int totalHeight = BOARD_HEIGHT + 2*(MARGIN+BORDER);
+    int totalWidth = BOARD_WIDTH + 2*(MARGIN+BORDER);
     assert(totalHeight <= gfx_screenHeight());
     assert(totalWidth <= gfx_screenWidth());
 }
@@ -60,7 +92,14 @@ int main() {
     if (gfx_init()) abort();
     checkConstants();
     initVariables();
-    renderBoard();
+    drawBoard();
+    piece tile;
+    tile.coors[0] = 0;
+    tile.coors[1] = 0;
+    tile.kind = 0;
+    tile.rotation = 0;
+    drawPiece(tile);
+    gfx_updateScreen();
     gfx_getkey();
     return 0;
 }
