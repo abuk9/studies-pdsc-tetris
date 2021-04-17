@@ -22,7 +22,7 @@ static struct RGB colors[COLOR_MAX] = {
 
 // Screen dimension constants
 const int SCREEN_WIDTH = 1200;
-const int SCREEN_HEIGHT = 700;
+const int SCREEN_HEIGHT = 900;
 
 void gfx_pixel(int x, int y, enum color c) {
   pixelRGBA(renderer, x, y, colors[c].r, colors[c].g, colors[c].b, 255);
