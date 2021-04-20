@@ -129,7 +129,7 @@ piece initPiece() {
     thePiece.kind = rand() % PIECE_KINDS;
     assert(thePiece.kind < 8);
     thePiece.coors[0] = GAME_WIDTH / 2 - 2;
-    thePiece.coors[1] = 0;
+    thePiece.coors[1] = -1;
     thePiece.rotation = 0;
     return thePiece;
 }
@@ -214,7 +214,7 @@ void handleAction(int key, piece* thePiece) {
 void run() {
     while (!isGameLost()) {
         piece thePiece = initPiece();
-        while (!hasPieceFallen(thePiece)) {
+        do {
             thePiece.coors[1]++;
             render(thePiece);
             long start = clock();
@@ -225,7 +225,7 @@ void run() {
                     render(thePiece);
                 }
             }
-        }
+        } while (!hasPieceFallen(thePiece));
 
         int row;
         lockPiece(thePiece);
