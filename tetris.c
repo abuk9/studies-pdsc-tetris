@@ -87,10 +87,24 @@ void lockPiece(piece tile) {
     }
 }
 
-void collapseBoard() {
+int getFullRow() {
+    for (int y = 0; y < GAME_HEIGHT; y++) {
+        bool isFull = true;
+        for (int x = 0; x < GAME_WIDTH; x++) {
+            if (!board[y][x]) {
+                isFull = false;
+                break;
+            }
+        }
+        if (isFull) return y;
+    }
+    return -1;
+}
+
+void collapseRow(int row) {
     // Why doesn't this work?
     // memcpy(board[1], board[0], sizeof(char)*(GAME_HEIGHT-1)*GAME_WIDTH);
-    for (int y = GAME_HEIGHT-1; y >= 1; y--) {
+    for (int y = row; y >= 1; y--) {
         memcpy(board[y], board[y-1], sizeof(char)*GAME_WIDTH);
     }
     for (int x = 0; x < GAME_WIDTH; x++) board[0][x] = 0;
@@ -108,13 +122,6 @@ bool isGameLost() {
         if (board[0][x]) return true;
     }
     return false;
-}
-
-bool isLastRowFull() {
-    for (int x=0; x<GAME_WIDTH; x++) {
-        if (!board[GAME_HEIGHT-1][x]) return false;
-    }
-    return true;
 }
 
 piece initPiece() {
@@ -219,8 +226,10 @@ void run() {
                 }
             }
         }
+
+        int row;
         lockPiece(thePiece);
-        while(isLastRowFull()) collapseBoard();
+        while((row = getFullRow()) != -1) collapseRow(row);
     }
 }
 
