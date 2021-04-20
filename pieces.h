@@ -1,3 +1,5 @@
+#define PIECE_KINDS 7
+
 const char pieces[7 /*kind */ ][4 /* rotation */ ][4][4] =
 {
 /* square */

@@ -2,9 +2,11 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <string.h>
+#include <time.h>
 #include "primlib.h"
 #include "pieces.h"
 
+#define FRAMETIME 0.8 // In seconds
 #define GAME_HEIGHT 20
 #define GAME_WIDTH 15
 
@@ -86,8 +88,10 @@ void lockPiece(piece tile) {
 }
 
 void collapseBoard() {
-    for (int y = 0; y < GAME_HEIGHT-1; y++) {
-        memcpy(board[y], board[y+1], sizeof(char)*GAME_WIDTH);
+    // Why doesn't this work?
+    // memcpy(board[1], board[0], sizeof(char)*(GAME_HEIGHT-1)*GAME_WIDTH);
+    for (int y = GAME_HEIGHT-1; y >= 1; y--) {
+        memcpy(board[y], board[y-1], sizeof(char)*GAME_WIDTH);
     }
     for (int x = 0; x < GAME_WIDTH; x++) board[0][x] = 0;
 }
@@ -99,22 +103,71 @@ void checkConstants() {
     assert(totalWidth <= gfx_screenWidth());
 }
 
+bool isGameLost() {
+    for (int x=0; x < GAME_WIDTH; x++) {
+        if (board[0][x]) return true;
+    }
+    return false;
+}
+
+piece initPiece() {
+    piece thePiece;
+    thePiece.kind = rand() % PIECE_KINDS;
+    assert(thePiece.kind < 8);
+    thePiece.coors[0] = GAME_WIDTH / 2 - 2;
+    thePiece.coors[1] = 0;
+    thePiece.rotation = 0;
+    return thePiece;
+}
+
+bool hasPieceFallen(piece thePiece) {
+    const char (*shape)[4] = pieces[thePiece.kind][thePiece.rotation];
+    for (int dy = 0; dy < 4; dy++) {
+        for (int dx = 0; dx < 4; dx++) {
+            char isFilled = *(*(shape+dy)+dx);
+            if (isFilled) {
+                int x = thePiece.coors[0] + dx;
+                int y = thePiece.coors[1] + dy;
+                if (y == GAME_HEIGHT -1) return true;
+                if (board[y+1][x]) return true;
+            }
+        }
+    }
+    return false;
+}
+
+void render(piece thePiece) {
+    drawBoard();
+    drawPiece(thePiece);
+    gfx_updateScreen();
+}
+
+void handleAction(int key, piece* thePiece) {}
+
+void run() {
+    while (!isGameLost()) {
+        piece thePiece = initPiece();
+        while (!hasPieceFallen(thePiece)) {
+            thePiece.coors[1]++;
+            render(thePiece);
+            long start = clock();
+            while((clock() - start)/CLOCKS_PER_SEC < FRAMETIME) {
+                int key = gfx_pollkey();
+                if (key != -1) {
+                    handleAction(key, &thePiece);
+                    render(thePiece);
+                }
+            }
+        }
+        lockPiece(thePiece);
+    }
+}
+
 int main() {
     if (gfx_init()) abort();
     checkConstants();
     initVariables();
-    drawBoard();
-    // piece tile;
-    // tile.coors[0] = 0;
-    // tile.coors[1] = 0;
-    // tile.kind = 0;
-    // tile.rotation = 0;
-    // drawPiece(tile);
-    gfx_updateScreen();
-    SDL_Delay(2000);
-    collapseBoard();
-    drawBoard();
-    gfx_updateScreen();
-    gfx_getkey();
+    srand((unsigned) time(NULL));
+    run();
     return 0;
 }
