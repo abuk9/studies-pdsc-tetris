@@ -194,6 +194,7 @@ bool canPieceRotate(piece aPiece) {
 void handleAction(int key, piece* thePiece) {
     int sense = 1; // 1 meaning 'right'
     switch (key) {
+        case SDLK_ESCAPE: abort();
         case SDLK_LEFT: sense = -1;
         case SDLK_RIGHT:
             if (canPieceMove(*thePiece, sense))
