@@ -110,6 +110,13 @@ bool isGameLost() {
     return false;
 }
 
+bool isLastRowFull() {
+    for (int x=0; x<GAME_WIDTH; x++) {
+        if (!board[GAME_HEIGHT-1][x]) return false;
+    }
+    return true;
+}
+
 piece initPiece() {
     piece thePiece;
     thePiece.kind = rand() % PIECE_KINDS;
@@ -186,6 +193,7 @@ void run() {
             }
         }
         lockPiece(thePiece);
+        while(isLastRowFull()) collapseBoard();
     }
 }
 
