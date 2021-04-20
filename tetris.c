@@ -142,7 +142,33 @@ void render(piece thePiece) {
     gfx_updateScreen();
 }
 
-void handleAction(int key, piece* thePiece) {}
+bool canPieceMove(piece aPiece, int sense) {
+    const char (*shape)[4] = pieces[aPiece.kind][aPiece.rotation];
+    for (int dy = 0; dy < 4; dy++) {
+        for (int dx = 0; dx < 4; dx++) {
+            char isFilled = *(*(shape+dy)+dx);
+            if (isFilled) {
+                int x = aPiece.coors[0] + dx;
+                int y = aPiece.coors[1] + dy;
+                if (x + sense >= GAME_WIDTH) return false;
+                if (x + sense < 0) return false;
+                if (board[y][x + sense]) return false;
+            }
+        }
+    }
+    return true;
+}
+
+void handleAction(int key, piece* thePiece) {
+    int sense = 1; // 1 meaning 'right'
+    switch (key) {
+        case SDLK_LEFT: sense = -1;
+        case SDLK_RIGHT:
+            if (canPieceMove(*thePiece, sense))
+                (*thePiece).coors[0] += sense;
+            break;
+    }
+}
 
 void run() {
     while (!isGameLost()) {
