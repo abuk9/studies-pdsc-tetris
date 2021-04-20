@@ -174,6 +174,9 @@ void handleAction(int key, piece* thePiece) {
             if (canPieceMove(*thePiece, sense))
                 (*thePiece).coors[0] += sense;
             break;
+        case SDLK_DOWN:
+            while (!hasPieceFallen(*thePiece))
+                (*thePiece).coors[1]++;
     }
 }
 
