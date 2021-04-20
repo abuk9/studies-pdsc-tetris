@@ -166,6 +166,24 @@ bool canPieceMove(piece aPiece, int sense) {
     return true;
 }
 
+bool canPieceRotate(piece aPiece) {
+    int nextRotation = (aPiece.rotation + 1) % 4;
+    const char (*shape)[4] = pieces[aPiece.kind][nextRotation];
+    for (int dy = 0; dy < 4; dy++) {
+        for (int dx = 0; dx < 4; dx++) {
+            char isFilled = *(*(shape+dy)+dx);
+            if (isFilled) {
+                int x = aPiece.coors[0] + dx;
+                int y = aPiece.coors[1] + dy;
+                if (x >= GAME_WIDTH) return false;
+                if (x < 0) return false;
+                if (board[y][x]) return false;
+            }
+        }
+    }
+    return true;
+}
+
 void handleAction(int key, piece* thePiece) {
     int sense = 1; // 1 meaning 'right'
     switch (key) {
@@ -177,6 +195,12 @@ void handleAction(int key, piece* thePiece) {
         case SDLK_DOWN:
             while (!hasPieceFallen(*thePiece))
                 (*thePiece).coors[1]++;
+            break;
+        case SDLK_SPACE:
+            if(canPieceRotate(*thePiece)) {
+                int newRotation = ((*thePiece).rotation + 1) % 4;
+                (*thePiece).rotation = newRotation;
+            }
     }
 }
 
