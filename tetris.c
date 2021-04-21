@@ -132,7 +132,7 @@ piece initPiece() {
     return thePiece;
 }
 
-bool anyPiecePixel(piece aPiece, bool cond(int, int)) {
+bool isPieceCollidingWithBoard(piece aPiece) {
     const char (*shape)[4] = pieces[aPiece.kind][aPiece.rotation];
     for (int dy = 0; dy < 4; dy++) {
         for (int dx = 0; dx < 4; dx++) {
@@ -140,41 +140,28 @@ bool anyPiecePixel(piece aPiece, bool cond(int, int)) {
             if (isFilled) {
                 int x = aPiece.coors[0] + dx;
                 int y = aPiece.coors[1] + dy;
-                if (cond(x, y)) return true;
+                if (x < 0 || x >= GAME_WIDTH) return true;
+                if (y >= GAME_HEIGHT) return true;
+                if (board[y][x]) return true;
             }
         }
     }
     return false;
 }
 
-// bool isGroundBelowPixel(int x, int y) {
-//         if (y == GAME_HEIGHT -1) return true;
-//         if (board[y+1][x]) return true;
-//         return false;
-//     }
-
-
-
-bool isPixelColliding(int x, int y) {
-    if (x < 0 || x >= GAME_WIDTH) return true;
-    if (y >= GAME_HEIGHT) return true;
-    if (board[y][x]) return true;
-    return false;
-}
-
 bool hasPieceFallen(piece aPiece) {
     aPiece.coors[1]++;
-    return anyPiecePixel(aPiece, isPixelColliding);
+    return isPieceCollidingWithBoard(aPiece);
 }
 
 bool canPieceMove(piece aPiece, int sense) {
     aPiece.coors[0] += sense;
-    return !anyPiecePixel(aPiece, isPixelColliding);
+    return !isPieceCollidingWithBoard(aPiece);
 }
 
 bool canPieceRotate(piece aPiece) {
     aPiece.rotation = (aPiece.rotation + 1) % 4;
-    return !anyPiecePixel(aPiece, isPixelColliding);
+    return !isPieceCollidingWithBoard(aPiece);
 }
 
 void handleAction(int key, piece* thePiece) {
@@ -197,6 +184,16 @@ void handleAction(int key, piece* thePiece) {
             }
     }
 }
+void handleInput(piece* aPiece) {
+    long start = clock();
+    while((clock() - start)/CLOCKS_PER_SEC < FRAMETIME) {
+        int key = gfx_pollkey();
+        if (key != -1) {
+            handleAction(key, aPiece);
+            render(*aPiece);
+        }
+    }
+}
 
 void run() {
     while (!isGameLost()) {
@@ -204,14 +201,7 @@ void run() {
         do {
             thePiece.coors[1]++;
             render(thePiece);
-            long start = clock();
-            while((clock() - start)/CLOCKS_PER_SEC < FRAMETIME) {
-                int key = gfx_pollkey();
-                if (key != -1) {
-                    handleAction(key, &thePiece);
-                    render(thePiece);
-                }
-            }
+            handleInput(&thePiece);
         } while (!hasPieceFallen(thePiece));
 
         int row;
