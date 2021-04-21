@@ -6,7 +6,7 @@
 #include "primlib.h"
 #include "pieces.h"
 
-#define FRAMETIME 0.8 // In seconds
+#define FRAMETIME 0.5 // In seconds
 #define GAME_HEIGHT 20
 #define GAME_WIDTH 15
 
@@ -27,9 +27,6 @@ typedef struct {
 void initVariables() {
     boardCoors[0] = (gfx_screenWidth() - BOARD_WIDTH) / 2;
     boardCoors[1] = (gfx_screenHeight() - BOARD_HEIGHT) / 2;
-    for (int x = 0; x < GAME_WIDTH; x++) board[19][x] = 1;
-    for (int x = 0; x < GAME_WIDTH; x++) board[18][x] = 1;
-    board[18][0] = 0;
 }
 
 void drawPixel(int x, int y, int color) {
@@ -73,6 +70,13 @@ void drawPiece(piece tile) {
     }
 }
 
+void render(piece thePiece) {
+    drawBoard();
+    drawPiece(thePiece);
+    gfx_filledRect(0, 0, 1, 1, BLACK); // This shouldn't work, but it does -_O.o_-
+    gfx_updateScreen();
+}
+
 void lockPiece(piece tile) {
     const char (*shape)[4] = pieces[tile.kind][tile.rotation];
     for (int dy = 0; dy < 4; dy++) {
@@ -110,12 +114,6 @@ void collapseRow(int row) {
     for (int x = 0; x < GAME_WIDTH; x++) board[0][x] = 0;
 }
 
-void checkConstants() {
-    int totalHeight = BOARD_HEIGHT + 2*(MARGIN+BORDER);
-    int totalWidth = BOARD_WIDTH + 2*(MARGIN+BORDER);
-    assert(totalHeight <= gfx_screenHeight());
-    assert(totalWidth <= gfx_screenWidth());
-}
 
 bool isGameLost() {
     for (int x=0; x < GAME_WIDTH; x++) {
@@ -148,12 +146,6 @@ bool hasPieceFallen(piece thePiece) {
         }
     }
     return false;
-}
-
-void render(piece thePiece) {
-    drawBoard();
-    drawPiece(thePiece);
-    gfx_updateScreen();
 }
 
 bool canPieceMove(piece aPiece, int sense) {
@@ -232,6 +224,13 @@ void run() {
         lockPiece(thePiece);
         while((row = getFullRow()) != -1) collapseRow(row);
     }
+}
+
+void checkConstants() {
+    int totalHeight = BOARD_HEIGHT + 2*(MARGIN+BORDER);
+    int totalWidth = BOARD_WIDTH + 2*(MARGIN+BORDER);
+    assert(totalHeight <= gfx_screenHeight());
+    assert(totalWidth <= gfx_screenWidth());
 }
 
 int main() {
