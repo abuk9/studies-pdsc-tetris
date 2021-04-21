@@ -63,8 +63,7 @@ void drawPiece(piece tile) {
             // ASK QUESTION ABOUT THIS
             char isFilled = *(*(shape+dy)+dx);
             if (isFilled) {
-                int color = isFilled == 1 ? CYAN : BLUE;
-                drawPixel(tile.coors[0] + dx, tile.coors[1] + dy, color);
+                drawPixel(tile.coors[0] + dx, tile.coors[1] + dy, CYAN);
             }
         }
     }
@@ -73,7 +72,7 @@ void drawPiece(piece tile) {
 void render(piece thePiece) {
     drawBoard();
     drawPiece(thePiece);
-    gfx_filledRect(0, 0, 1, 1, BLACK); // This shouldn't work, but it does -_O.o_-
+    gfx_filledRect(0, 0, 1, 1, BLACK); // This shouldn't help, but it does -_O.o_-
     gfx_updateScreen();
 }
 
