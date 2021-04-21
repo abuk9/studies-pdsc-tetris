@@ -132,23 +132,7 @@ piece initPiece() {
     return thePiece;
 }
 
-bool hasPieceFallen(piece thePiece) {
-    const char (*shape)[4] = pieces[thePiece.kind][thePiece.rotation];
-    for (int dy = 0; dy < 4; dy++) {
-        for (int dx = 0; dx < 4; dx++) {
-            char isFilled = *(*(shape+dy)+dx);
-            if (isFilled) {
-                int x = thePiece.coors[0] + dx;
-                int y = thePiece.coors[1] + dy;
-                if (y == GAME_HEIGHT -1) return true;
-                if (board[y+1][x]) return true;
-            }
-        }
-    }
-    return false;
-}
-
-bool canPieceMove(piece aPiece, int sense) {
+bool anyPiecePixel(piece aPiece, bool cond(int, int)) {
     const char (*shape)[4] = pieces[aPiece.kind][aPiece.rotation];
     for (int dy = 0; dy < 4; dy++) {
         for (int dx = 0; dx < 4; dx++) {
@@ -156,31 +140,41 @@ bool canPieceMove(piece aPiece, int sense) {
             if (isFilled) {
                 int x = aPiece.coors[0] + dx;
                 int y = aPiece.coors[1] + dy;
-                if (x + sense >= GAME_WIDTH) return false;
-                if (x + sense < 0) return false;
-                if (board[y][x + sense]) return false;
+                if (cond(x, y)) return true;
             }
         }
     }
-    return true;
+    return false;
+}
+
+// bool isGroundBelowPixel(int x, int y) {
+//         if (y == GAME_HEIGHT -1) return true;
+//         if (board[y+1][x]) return true;
+//         return false;
+//     }
+
+
+
+bool isPixelColliding(int x, int y) {
+    if (x < 0 || x >= GAME_WIDTH) return true;
+    if (y >= GAME_HEIGHT) return true;
+    if (board[y][x]) return true;
+    return false;
+}
+
+bool hasPieceFallen(piece aPiece) {
+    aPiece.coors[1]++;
+    return anyPiecePixel(aPiece, isPixelColliding);
+}
+
+bool canPieceMove(piece aPiece, int sense) {
+    aPiece.coors[0] += sense;
+    return !anyPiecePixel(aPiece, isPixelColliding);
 }
 
 bool canPieceRotate(piece aPiece) {
-    int nextRotation = (aPiece.rotation + 1) % 4;
-    const char (*shape)[4] = pieces[aPiece.kind][nextRotation];
-    for (int dy = 0; dy < 4; dy++) {
-        for (int dx = 0; dx < 4; dx++) {
-            char isFilled = *(*(shape+dy)+dx);
-            if (isFilled) {
-                int x = aPiece.coors[0] + dx;
-                int y = aPiece.coors[1] + dy;
-                if (x >= GAME_WIDTH) return false;
-                if (x < 0) return false;
-                if (board[y][x]) return false;
-            }
-        }
-    }
-    return true;
+    aPiece.rotation = (aPiece.rotation + 1) % 4;
+    return !anyPiecePixel(aPiece, isPixelColliding);
 }
 
 void handleAction(int key, piece* thePiece) {
