@@ -104,11 +104,7 @@ int getFullRow() {
 }
 
 void collapseRow(int row) {
-    // Why doesn't this work?
-    // memcpy(board[1], board[0], sizeof(char)*(GAME_HEIGHT-1)*GAME_WIDTH);
-    for (int y = row; y >= 1; y--) {
-        memcpy(board[y], board[y-1], sizeof(char)*GAME_WIDTH);
-    }
+    memmove(board[1], board[0], sizeof(char)*GAME_WIDTH*row);
     for (int x = 0; x < GAME_WIDTH; x++) board[0][x] = 0;
 }
 
