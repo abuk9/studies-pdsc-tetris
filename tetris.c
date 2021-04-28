@@ -60,7 +60,6 @@ void drawPiece(piece tile) {
     const char (*shape)[4] = pieces[tile.kind][tile.rotation];
     for (int dy = 0; dy < 4; dy++) {
         for (int dx = 0; dx < 4; dx++) {
-            // ASK QUESTION ABOUT THIS
             char isFilled = *(*(shape+dy)+dx);
             if (isFilled) {
                 drawPixel(tile.coors[0] + dx, tile.coors[1] + dy, CYAN);
@@ -140,7 +139,7 @@ bool isPieceCollidingWithBoard(piece aPiece) {
                 int x = aPiece.coors[0] + dx;
                 int y = aPiece.coors[1] + dy;
                 if (x < 0 || x >= GAME_WIDTH) return true;
-                if (y >= GAME_HEIGHT) return true;
+                if (y < 0 || y >= GAME_HEIGHT) return true;
                 if (board[y][x]) return true;
             }
         }
@@ -158,8 +157,33 @@ bool canPieceMove(piece aPiece, int sense) {
     return !isPieceCollidingWithBoard(aPiece);
 }
 
+void findCenter(piece aPiece, int center[2]) {
+    const char (*shape)[4] = pieces[aPiece.kind][aPiece.rotation];
+    for (int dy = 0; dy < 4; dy++) {
+        for (int dx = 0; dx < 4; dx++) {
+            char isFilled = *(*(shape+dy)+dx);
+            if (isFilled == 2) {
+                center[0] = dx;
+                center[1] = dy;
+                return;
+            }
+        }
+    }
+}
+
+void rotatePiece(piece *aPiece) {
+    int oldCenter[2], newCenter[2];
+    findCenter(*aPiece, oldCenter);
+    (*aPiece).rotation = ((*aPiece).rotation + 1) % 4;
+    findCenter(*aPiece, newCenter);
+    for (int i = 0; i < 2; i++) {
+        int vect = oldCenter[i] - newCenter[i];
+        (*aPiece).coors[i] += vect;
+    }
+}
+
 bool canPieceRotate(piece aPiece) {
-    aPiece.rotation = (aPiece.rotation + 1) % 4;
+    rotatePiece(&aPiece);
     return !isPieceCollidingWithBoard(aPiece);
 }
 
@@ -177,12 +201,11 @@ void handleAction(int key, piece* thePiece) {
                 (*thePiece).coors[1]++;
             break;
         case SDLK_SPACE:
-            if(canPieceRotate(*thePiece)) {
-                int newRotation = ((*thePiece).rotation + 1) % 4;
-                (*thePiece).rotation = newRotation;
-            }
+            if(canPieceRotate(*thePiece)) 
+                rotatePiece(thePiece);
     }
 }
+
 void handleInput(piece* aPiece) {
     long start = clock();
     while((clock() - start)/CLOCKS_PER_SEC < FRAMETIME) {
